@@ -1,0 +1,519 @@
+--create database AugETG_2021
+--use AugETG_2021
+
+
+
+CREATE TABLE DEPT (
+ DEPTNO              int NOT NULL,
+ DNAME               VARCHAR(14),
+ LOC                 VARCHAR(13),
+ CONSTRAINT DEPT_PRIMARY_KEY PRIMARY KEY (DEPTNO));
+INSERT INTO DEPT VALUES (10,'ACCOUNTING','NEW YORK');
+INSERT INTO DEPT VALUES (20,'RESEARCH','DALLAS');
+INSERT INTO DEPT VALUES (30,'SALES','CHICAGO');
+INSERT INTO DEPT VALUES (40,'OPERATIONS','BOSTON');
+CREATE TABLE EMP (
+ EMPNO               int NOT NULL,
+ ENAME               VARCHAR(10),
+ JOB                 VARCHAR(9),
+ MGR                 int CONSTRAINT EMP_SELF_KEY REFERENCES EMP (EMPNO),
+ HIREDATE            DATE,
+ SAL                 int,
+ COMM                int,
+ DEPTNO              int NOT NULL,
+ CONSTRAINT EMP_FOREIGN_KEY FOREIGN KEY (DEPTNO) REFERENCES DEPT (DEPTNO),
+ CONSTRAINT EMP_PRIMARY_KEY PRIMARY KEY (EMPNO));
+INSERT INTO EMP VALUES (7839,'KING','PRESIDENT',NULL,'17-NOV-81',5000,NULL,10);
+INSERT INTO EMP VALUES (7698,'BLAKE','MANAGER',7839,'1-MAY-81',2850,NULL,30);
+INSERT INTO EMP VALUES (7782,'CLARK','MANAGER',7839,'9-JUN-81',2450,NULL,10);
+INSERT INTO EMP VALUES (7566,'JONES','MANAGER',7839,'2-APR-81',2975,NULL,20);
+INSERT INTO EMP VALUES (7654,'MARTIN','SALESMAN',7698,'28-SEP-81',1250,1400,30);
+INSERT INTO EMP VALUES (7499,'ALLEN','SALESMAN',7698,'20-FEB-81',1600,300,30);
+INSERT INTO EMP VALUES (7844,'TURNER','SALESMAN',7698,'8-SEP-81',1500,0,30);
+INSERT INTO EMP VALUES (7900,'JAMES','CLERK',7698,'3-DEC-81',950,NULL,30);
+INSERT INTO EMP VALUES (7521,'WARD','SALESMAN',7698,'22-FEB-81',1250,500,30);
+INSERT INTO EMP VALUES (7902,'FORD','ANALYST',7566,'3-DEC-81',3000,NULL,20);
+INSERT INTO EMP VALUES (7369,'SMITH','CLERK',7902,'17-DEC-80',800,NULL,20);
+INSERT INTO EMP VALUES (7788,'SCOTT','ANALYST',7566,'09-DEC-82',3000,NULL,20);
+INSERT INTO EMP VALUES (7876,'ADAMS','CLERK',7788,'12-JAN-83',1100,NULL,20);
+INSERT INTO EMP VALUES (7934,'MILLER','CLERK',7782,'23-JAN-82',1300,NULL,10);
+-------------------------------------------------------------------------------------
+
+use AugETG_2021
+select empno,ename,deptno,
+case
+	when deptno=10 then 'in 10th Dept'
+	when deptno=20 then 'in 20th Dept'
+	when deptno=30 then 'in 30th Dept'
+	when deptno=40 then 'in 40th Dept'
+end EmpDept
+from emp order by deptno
+
+-----------------------------------------------------
+DECLARE @age INT
+SET @age = -3
+IF(@age>=18)
+	BEGIN
+		PRINT 'Adult'
+		PRINT 'Successful'
+	END
+
+ELSE IF(@age<18 AND @age>0)
+	BEGIN
+		PRINT 'Child'
+		PRINT 'Successful'
+	END
+
+ELSE
+	BEGIN
+		PRINT 'Invalid Age'
+	END
+
+---------------------------------------------------------
+--while execution
+--SELECT* 
+--FROM EMP
+use AugETG_2021
+DECLARE @deptnum int
+WHILE(SELECT AVG(SAL) FROM EMP)<1600
+BEGIN
+SET @deptnum =(SELECT DEPTNO FROM EMP)
+PRINT 'Deptno is ' + CAST(@deptnum AS VARCHAR(3))
+END
+PRINT 'SUCCESS'
+------------------------------------------------------------
+declare @name varchar(10), @dept varchar(50)
+set @name = 'Roshan'
+set @dept = 'Training'
+print @name
+print @dept
+go
+---------------------------------------------------------------
+SET NOCOUNT OFF;  
+
+select ename from emp where ename like 'S%'
+
+DECLARE @NOCOUNT VARCHAR(3) = 'OFF';  
+IF ( (512 & @@OPTIONS) = 512 ) SET @NOCOUNT = 'ON';  
+SELECT @NOCOUNT AS NOCOUNT;
+----------------------------------------------------
+--Create Product table
+CREATE TABLE Product
+(
+ ProductID INT PRIMARY KEY, 
+ Name VARCHAR(40), 
+ Price INT,
+ Quantity INT
+ )
+ GO
+
+ -- Populate Product Table with test data
+ INSERT INTO Product VALUES(101, 'Product-1', 100, 10)
+ INSERT INTO Product VALUES(102, 'Product-2', 200, 15)
+ INSERT INTO Product VALUES(103, 'Product-3', 300, 20)
+ INSERT INTO Product VALUES(104, 'Product-4', 400, 25)
+
+ select * from Product
+
+ --commit transaction
+ BEGIN TRANSACTION
+ INSERT INTO Product VALUES(105,'Product-5',500, 30)
+ UPDATE Product SET Price =350 WHERE ProductID = 103
+ DELETE FROM Product WHERE ProductID = 103
+COMMIT TRANSACTION
+
+--Rollback
+BEGIN TRANSACTION
+INSERT INTO Product VALUES(106,'Product-6',600, 30)
+UPDATE Product SET Price =550 WHERE ProductID = 105
+DELETE FROM Product WHERE ProductID = 104
+
+ROLLBACK;
+----------------------------------------------------------
+CREATE TABLE Employee_Test
+(
+Emp_ID INT Identity,-- starts with one increments by 1
+Emp_name Varchar(100),
+Emp_Sal Decimal (10,2)
+)
+
+INSERT INTO Employee_Test VALUES ('Anees',1000);
+INSERT INTO Employee_Test VALUES ('Rick',1200);
+INSERT INTO Employee_Test VALUES ('John',1100);
+INSERT INTO Employee_Test VALUES ('Stephen',1300);
+INSERT INTO Employee_Test VALUES ('Maria',1400);
+
+
+select * from Employee_Test
+
+CREATE TABLE Employee_Test_Audit
+(
+Emp_ID int,
+Emp_name varchar(100),
+Emp_Sal decimal (10,2),
+Audit_Action varchar(100),
+Audit_Timestamp datetime
+)
+
+select * from Employee_Test_Audit
+
+CREATE TRIGGER trgAfterInsert ON Employee_Test
+FOR INSERT
+AS
+	declare @empid int;
+	declare @empname varchar(100);
+	declare @empsal decimal(10,2);
+	declare @audit_action varchar(100);
+	select @empid=i.Emp_ID from inserted i;
+	select @empname=i.Emp_Name from inserted i;
+	select @empsal=i.Emp_Sal from inserted i;
+	set @audit_action='Inserted Record--
+	After Insert Trigger.';
+	insert into Employee_Test_Audit
+values(@empid,@empname,@empsal,@audit_action,getdate());
+	PRINT 'After Insert Trigger fired.'
+GO
+
+
+--Insert, Delete, Update
+CREATE TRIGGER trgAfterInsDelUp ON Employee_Test
+FOR INSERT,DELETE,UPDATE
+AS
+	declare @empid int;
+	declare @empname varchar(100);
+	declare @empsal decimal(10,2);
+	declare @audit_action varchar(100);
+	declare @inscount int;
+	declare @delcount int;
+	select @inscount= Count(*) from inserted i;
+	select @delcount= Count(*) from deleted d;
+
+	--Insert Condition
+	if(@inscount>0 and @delcount=0)
+	BEGIN
+	select @empid=i.Emp_ID from inserted i;
+	select @empname=i.Emp_Name from inserted i;
+	select @empsal=i.Emp_Sal from inserted i;
+	set @audit_action='Inserted Record--
+	After Insert Trigger.';
+	insert into Employee_Test_Audit
+	values(@empid,@empname,@empsal,@audit_action,getdate());
+	PRINT 'After Insert Trigger fired.'
+	END
+
+	--Delete Condition
+	if(@inscount=0 and @delcount>0)
+	BEGIN
+	select @empid=i.Emp_ID from deleted i;
+	select @empname=i.Emp_Name from deleted i;
+	select @empsal=i.Emp_Sal from deleted i;
+	set @audit_action='Deleted Record--
+	After Delete Trigger.';
+	insert into Employee_Test_Audit
+	values(@empid,@empname,@empsal,@audit_action,getdate());
+	PRINT 'After Delete Trigger fired.'
+	END
+
+	--Update Condition
+	if(@inscount>0 and @delcount>0)
+	BEGIN
+	select @empid=i.Emp_ID from deleted i;
+	select @empname=i.Emp_Name from deleted i;
+	select @empsal=i.Emp_Sal from deleted i;
+	select @empid=i.Emp_ID from inserted i;
+	select @empname=i.Emp_Name from inserted i;
+	select @empsal=i.Emp_Sal from inserted i;
+	set @audit_action='Updated Record--
+	After Update Trigger.';
+	insert into Employee_Test_Audit
+	values(@empid,@empname,@empsal,@audit_action,getdate());
+	PRINT 'After Update Trigger fired.'
+	END
+GO
+
+
+CREATE TRIGGER trgInsteadOfDelete ON emp
+INSTEAD OF DELETE
+AS
+	declare @empno int;
+	declare @job varchar(100);
+	select @job=d.job from deleted d;
+	select @empno=d.empno from deleted d;
+	BEGIN
+		if(@job='PRESIDENT')
+		begin
+		RAISERROR('Cannot delete this person who is VVIP',16,1);
+		end
+		else
+		begin
+			delete from emp where empno=@empno;
+			PRINT 'Record Deleted -- Instead of Delete Trigger.'
+		end
+	END
+GO
+
+select * from emp
+
+delete from emp where empno=7900
+
+--1
+CREATE TRIGGER trgInsteadOfSal ON emp
+INSTEAD OF UPDATE
+AS
+	declare @empno int;
+	declare @sal int;
+	select @empno from inserted i;
+	select @sal from deleted d;
+	select @sal from inserted i;
+	BEGIN
+		if(@sal<(select sal from emp where empno=@empno))
+			begin
+			RAISERROR('Cannot update this salary ',16,1);
+			end
+		else
+			begin
+				update emp set sal=@sal where empno=@empno;
+				PRINT 'Record Updated -- Instead of Update Trigger.'
+			end
+	END
+GO
+
+update emp set sal=500 where empno=7369
+
+--2
+CREATE TRIGGER trgInsteadOfThurs ON emp
+INSTEAD OF DELETE
+AS
+	if((select DATENAME(weekday,getdate()))='Tuesday')
+
+//incomplete
+
+-------------------------------------------------------------
+use AugETG_2021
+
+declare empcursor cursor for select empno, ename, sal from
+emp order by sal desc
+declare @name varchar(10), @sal int,@empno int
+open empcursor
+fetch next from empcursor into @empno, @name, @sal
+while @@FETCH_STATUS=0
+begin
+print @name + ' is earning ' + cast(@sal as varchar)
+fetch next from empcursor into @empno, @name, @sal
+end
+close empcursor
+deallocate empcursor
+go
+-------------------------------------------------------------
+create function GetNameByID(@empno int)
+returns varchar(50)
+begin
+Declare @name varchar(50)
+select @name=ename from emp where empno=@empno
+return @name
+end;
+
+select dbo.GetNameByID(7369)
+
+create function AnnualSal(@empno int)
+returns int
+begin
+Declare @sal int
+select @sal= sal*12 from emp where empno=@empno
+return @sal
+end;
+
+select dbo.AnnualSal(7369)
+
+create function NumberOfEmployees(@deptno int)
+returns int
+begin
+Declare @count int
+select @count=count(deptno) from emp where deptno=@deptno
+return @count
+end;
+
+select dbo.NumberOfEmployees(20)
+
+create FUNCTION GetEmpByDept(@dept int)
+RETURNS TABLE
+AS
+RETURN
+(
+	select * from emp where deptno=@dept
+);
+
+select * from GetEmpByDept(20)
+
+
+--1
+create FUNCTION GetEmpByMgrID(@mgrid int)
+RETURNS TABLE
+AS
+RETURN
+(
+	select ename from emp where mgr=@mgrid
+);
+
+select * from GetEmpByMgrID(7698)
+
+--2
+create FUNCTION GetEmpBySal(@num int)
+RETURNS TABLE
+AS
+RETURN
+(
+	select ename from emp where sal>@num
+);
+
+select * from GetEmpBySal(1200)
+------------------------------------------------------
+select * from emp
+
+--1
+create procedure DisplayEmpByDeptno(@deptno int)
+as
+ begin
+ select empno,ename,sal,job,deptno,comm,mgr from EMP where deptno=@deptno
+ end
+
+ exec DisplayEmpByDeptno 20
+
+ --2
+ create procedure DisplayEmpSal(@empno int)
+ as
+ begin
+ select sal from emp where empno=@empno
+ end
+
+ exec DisplayEmpSal 7521
+
+ --3
+ create procedure NumberOfEmp(@deptno int)
+ as
+ begin
+ select count(deptno) as 'Count' from emp where deptno=@deptno
+ end
+
+ exec NumberOfEmp 20
+
+ --4
+ create procedure MinMaxSal(@deptno int)
+ as
+ begin
+ select min(sal) as 'MinSal',max(sal) as 'MaxSal' from emp where deptno=@deptno
+ end
+
+ exec MinMaxSal 30
+--------------------------------------------------------------------
+use AugETG_2021
+
+Create procedure GetAllEmpDetails
+as
+begin
+select empno,ename,sal,job,deptno,comm,mgr from emp
+end
+
+exec GetAllEmpDetails
+
+
+
+ --drop procedure dispDetails
+
+ exec dispDetails 20
+
+ select* from dept
+
+ create procedure AddNewDept(@deptno int,@dname varchar(50)=null,@loc varchar(50)=null)
+ as
+ begin
+ insert into dept values(@deptno,@dname,@loc)
+ end
+
+ exec AddNewDept 60,'ADMIN','HYDERABAD'
+
+ exec AddNewDept 70
+
+ create procedure DeleteDept(@deptno int)
+ as
+ begin
+ delete from DEPT where DEPTNO=@deptno
+ end
+
+ exec DeleteDept 70
+
+ create procedure UpdateDept(@deptno int,@loc varchar(50))
+ as
+ begin
+ update dept set loc=@loc where deptno=@deptno
+ end
+
+ exec UpdateDept 60,'CHENNAI'
+------------------------------------------------------------------
+use tempdb
+
+--create proc
+create procedure SayHello
+as
+Begin
+PRINT 'Hello World'
+End
+
+--call the proc
+exec SayHello
+
+create procedure SayHelloByName(@name varchar(50))
+as
+Begin
+PRINT 'Hello World '+@name
+End
+
+exec SayHelloByName 'Roshan'
+
+--drop procedure <procedure name> for dropping
+
+----------------------------------------------------------------
+SELECT CEILING(123.78), CEILING(-145.76), CEILING($189.7)
+
+SELECT FLOOR(123.78), FLOOR(-145.76), FLOOR($189.7)
+
+SELECT RAND(100), RAND(), RAND()
+
+SELECT ROUND(123.9994, 3), ROUND(123.9995, 3);
+
+SELECT SQRT(4), SQRT(10);
+
+SELECT ASCII('A') AS A, ASCII('B') AS B,   
+ASCII('a') AS a, ASCII('b') AS b,  
+ASCII(1) AS [1], ASCII(2) AS [2];
+
+--ASCII
+--Declare @n int
+--set @n= 0
+--WHILE(@n<=9)
+--	BEGIN
+--		print ASCII([@n])
+--		set @n= @n+1
+--	END
+
+--------------------------------------------------------------
+DECLARE @name varchar(10)
+DECLARE @sal int
+use AugETG_2021
+
+--SELECT *FROM emp
+
+begin
+select @name= ename, @sal=sal from emp where empno=7499
+select @name
+select @sal
+end
+
+DECLARE @num int
+set @num=1
+WHILE @num<=10
+BEGIN
+print @num
+set @num=@num+1
+END
+----------------------------------------------------
