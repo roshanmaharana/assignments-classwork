@@ -1,0 +1,50 @@
+DESKTOP-B3JAPI0
+
+select@@server
+
+
+go to tools>nuget packager manager>copy-paste the below code(in 1 line)
+
+Scaffold-DbContext "Server=DESKTOP-B3JAPI0;Database=AugETG_2021;Trusted_Connection=True;" Microsoft.EntityFrameworkCore.SqlServer -Tables emp -OutputDir Models
+
+
+
+using EF---
+
+static void main(string args[])
+{
+GetAllEmpDetails();
+Console.ReadLine();
+}
+
+private static void GetAllEmpDetails()
+{
+var ctx=new AugETG_2021Context();
+
+var emps=ctx.Emps;
+foreach(var e in emps)
+{
+Console.WriteLine(e.Ename+" "+e.Sal.ToString());
+}
+}
+
+
+private static void AddNewEmployee()
+{
+	var ctx=new AugETG_2021Context();
+	Emp employee=new Emp();
+	employee.Empno=5050;
+	employee.Ename="Mary";
+	employee.Sal=1000;
+	employee.Deptno=10;
+	try
+	{
+		ctx.Emps.Add(employee);
+		ctx.SaveChanges();
+		Console.WriteLine("new employee added successfully");
+	}
+	catch(Exception ex)
+	{
+		Console.WriteLine(ex.InnerException.ToString());
+	}
+}
